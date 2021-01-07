@@ -2,7 +2,8 @@ function init() {
   //Event Listener
   document.getElementById("api_btn").addEventListener("click", function () {
     //API
-    const city = 'Vancouver';
+    const city = document.getElementById("city").value;
+    console.log(city);
     const apiKey = "7330f3abac0f47b887b1e5fe1b755d36";
     const apiURL = "https://api.ipgeolocation.io/astronomy?apiKey=" + apiKey + "&location=" + city;
 
@@ -15,6 +16,13 @@ function init() {
         resultArray = await response.json();
         console.log(resultArray);
         const as_content = document.getElementById("api_content");
+        //Light direction update according to API
+        const rho = 40;
+        const dir_x = rho*Math.cos(resultArray.sun_altitude*(Math.PI/180))*Math.cos(resultArray.sun_azimuth*(Math.PI/180));
+        const dir_y = rho*Math.sin(resultArray.sun_altitude*(Math.PI/180));
+        const dir_z = rho*Math.cos(resultArray.sun_altitude*(Math.PI/180))*Math.sin(resultArray.sun_azimuth*(Math.PI/180));
+        dirLight.position.set(dir_x, dir_y, dir_z);
+        console.log(dirLight.position);
         as_content.textContent = "The sun altitude is " + resultArray.sun_altitude;
       } catch (error) {
         console.log("Oops...Cannot fetch the date from the API!");
@@ -43,12 +51,12 @@ function init() {
   document.getElementById("webgl-output").appendChild(renderer.domElement);
 
   //Camera Set Up
-  var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+  var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   camera.position.set(-30, 40, 50);
 
-  //Camera Perspective Control
-  var orbit_controls = new THREE.OrbitControls(camera, render.domElement);
+  // //Camera Perspective Control
+  var orbit_controls = new THREE.OrbitControls(camera, document.getElementById("webgl-output"));
   orbit_controls.autoRotate = false;
 
 
@@ -62,13 +70,13 @@ function init() {
     var mat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       metalness: 1,
-      roughess: 0.5
+      roughness: 0.5
     });// Mesh Materials
     var group = new THREE.Mesh(geometry, mat);
     group.position.set(0, 0, 0);
     group.scale.set(5, 5, 5);
     group.castShadow = true;
-    console.log(group);
+    //console.log(group);
     //Render the result
     scene.add(group);
   });
@@ -86,7 +94,7 @@ function init() {
   //Directional Light Bounding Box
   //Ray distance
   dirLight.shadow.camera.near = 0;
-  dirLight.shadow.camera.far = 70;
+  dirLight.shadow.camera.far = 100;
   //Ray Area
   dirLight.shadow.camera.left = -30;
   dirLight.shadow.camera.right = 30;
@@ -133,7 +141,7 @@ function init() {
       ambientLight.color = new THREE.Color(e);
     });
 
-    gui.add(controls, 'SunLight_Intensity', 0, 1).onChange(function (e) {
+    gui.add(controls, 'SunLight_Intensity', 0, 2).onChange(function (e) {
       dirLight.intensity = e;
     });
 
